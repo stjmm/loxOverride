@@ -9,5 +9,10 @@
 ### Chapter 16
 - [x] block comments
 ### Chapter 17
-- [] ternary operator
-- [] question mark, colon tokens
+- [x] ternary operator - later actaully emit bytecode for it
+- [x] question mark, colon tokens
+### Chapter 18
+
+
+
+Lox’s approach to error-handling is rather . . . spare. All errors are fatal and immediately halt the interpreter. There’s no way for user code to recover from an error. If Lox were a real language, this is one of the first things I would remedy.

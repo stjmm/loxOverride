@@ -169,6 +169,12 @@ static token_type_t identifier_type()
     return TOKEN_IDENTIFIER;
 }
 
+static token_t identifier()
+{
+    while (is_alpha(peek()) || is_digit(peek())) advance();
+    return make_token(identifier_type());
+}
+
 static token_t number()
 {
     while (is_digit(peek())) advance();
@@ -203,6 +209,7 @@ token_t scan_token()
     if (is_at_end()) return make_token(TOKEN_EOF);
 
     char c = advance();
+    if (is_alpha(c)) return identifier();
     if (is_digit(c)) return number();
 
     switch (c) {
