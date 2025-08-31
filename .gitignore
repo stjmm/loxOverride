@@ -42,3 +42,4 @@ Testing/
 .idea/
 *.swp
 *~
+.cache/
