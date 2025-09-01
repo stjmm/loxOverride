@@ -12,6 +12,9 @@
 - [x] ternary operator - later actaully emit bytecode for it
 - [x] question mark, colon tokens
 ### Chapter 18
+### Chapter 19
+- [] flexible array members for string obj
+- [] concat strings plus other values (numbers)
 
 
 
