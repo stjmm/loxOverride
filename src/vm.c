@@ -64,18 +64,39 @@ static bool is_falsey(value_t value)
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
-static void concatenate()
+static obj_string_t *number_to_string(double value)
 {
-    obj_string_t *b = AS_STRING(pop());
-    obj_string_t *a = AS_STRING(pop());
+    char buffer[64];
+    int length = snprintf(buffer, sizeof(buffer), "%g", value);
+    obj_string_t *result = ALLOCATE_FAM(obj_string_t, length + 1, OBJ_STRING);
+    memcpy(result->chars, buffer, length);
+    result->chars[length] = '\0';
+    result->length = length;
+    return result;
+}
 
-    int length = a->length + b->length;
-    char *chars = ALLOCATE(char, length + 1);
-    memcpy(chars, a->chars, a->length);
-    memcpy(chars + a->length, b->chars, b->length);
-    chars[length] = '\0';
+static void concatenate(value_t a, value_t b)
+{
+    obj_string_t *str_a, *str_b;
 
-    obj_string_t *result = take_string(chars, length);
+    if (IS_STRING(a)) {
+        str_a = AS_STRING(a);
+    } else {
+        str_a = number_to_string(AS_NUMBER(a));
+    }
+
+    if (IS_STRING(b)) {
+        str_b = AS_STRING(b);
+    } else {
+        str_b = number_to_string(AS_NUMBER(b));
+    }
+
+    int length = str_a->length + str_b->length;
+    obj_string_t *result = ALLOCATE_FAM(obj_string_t, length + 1, OBJ_STRING);
+    memcpy(result->chars, str_a->chars, str_a->length);
+    memcpy(result->chars + str_a->length, str_b->chars, str_b->length);
+    result->chars[length] = '\0';
+
     push(OBJ_VAL(result));
 }
 
@@ -123,12 +144,15 @@ static interpret_result_t run()
             case OP_GREATER:  BINARY_OP(BOOL_VAL, >); break;
             case OP_LESS:     BINARY_OP(BOOL_VAL, <); break;
             case OP_ADD: {
-                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                    concatenate();
-                } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
                     BINARY_OP(NUMBER_VAL, +); 
+                } else if ((IS_STRING(peek(0)) || IS_NUMBER(peek(0))) &&
+                          (IS_STRING(peek(1)) || IS_NUMBER(peek(1)))){
+                    value_t b = pop();
+                    value_t a = pop();
+                    concatenate(a, b);
                 } else {
-                    runtime_error("Operands must be two numbers or two strings.");
+                    runtime_error("Operands must be two numbers or two strings or a string and a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break; 

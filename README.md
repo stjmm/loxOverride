@@ -13,8 +13,8 @@
 - [x] question mark, colon tokens
 ### Chapter 18
 ### Chapter 19
-- [] flexible array members for string obj
-- [] concat strings plus other values (numbers)
+- [x] flexible array members for string obj - use for later objects
+- [x] concat strings plus other numbers (numbers)
 
 
 

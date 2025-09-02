@@ -3,9 +3,6 @@
 
 #include "common.h"
 
-#define ALLOCATE(type, count) \
-    (type*)reallocate(NULL, 0, sizeof(type) * (count))
-
 #define FREE(type, pointer) \
     (type*)reallocate(pointer, sizeof(type), 0)
 

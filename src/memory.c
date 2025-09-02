@@ -21,7 +21,6 @@ static void free_object(obj_t *object)
     switch (object->type) {
         case OBJ_STRING:
             obj_string_t *string = (obj_string_t*)object;
-            FREE_ARRAY(char, string->chars, string->length + 1);
             FREE(obj_string_t, object);
             break;
     }
