@@ -7,11 +7,18 @@
 // Bytecode operations
 typedef enum {
     OP_CONSTANT, // [OP_CODE, CONSTANT INDEX]
-    OP_CONSTANT_16, // [OP_CODE, 3 CONSTANT INDICES]
+    OP_CONSTANT_16, // [OP_CODE, 2 BYTE INDEX]
+    OP_NIL,
+    OP_TRUE,
+    OP_FALSE,
+    OP_EQUAL,
+    OP_GREATER,
+    OP_LESS,
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
     OP_DIVIDE,
+    OP_NOT,
     OP_NEGATE,
     OP_RETURN,
 } op_code_e;

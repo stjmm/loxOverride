@@ -10,6 +10,7 @@ typedef struct {
     uint8_t *ip; // Instruction pointer, points to bytecode instruction
     value_t stack[STACK_MAX]; // Stack for values (eg. OP_RETURN pops 1)
     value_t *stack_top; // Points to first empty stack element
+    obj_t *objects;
 } vm_t;
 
 typedef enum {
@@ -17,6 +18,8 @@ typedef enum {
     INTERPRET_COMPILE_ERROR,
     INTERPRET_RUNTIME_ERROR,
 } interpret_result_e;
+
+extern vm_t vm;
 
 void init_vm(void);
 void free_vm(void);

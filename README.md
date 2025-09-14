@@ -32,3 +32,11 @@ Or PREC_UNARY, only PREC_CALL (.) would be parsed in infix loop.
 
 ## Challenges
 - [] ternary operator
+
+
+# Chapter 5
+So each `value_t` now has a type, and a union `as`. We change our compiler a little bit to emit a specific value with type, and we add operators for them. Tokens like BANG_EQUAL actaully will emit bytecode like OP_EQUAL, OP_NOT.
+
+
+# Chapter 6
+`obj_string_t` has `obj_t` as its first member. We can then cast `obj_string_t` to `obj_t` so our `value_t` has a pointer to the first element of the string -> so the string as well.

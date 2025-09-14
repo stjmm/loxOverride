@@ -1,7 +1,43 @@
 #ifndef CLOX_VALUE_H
 #define CLOX_VALUE_H
 
-typedef double value_t;
+#include "common.h"
+
+typedef struct obj_t obj_t;
+typedef struct obj_string_t obj_string_t;
+
+typedef enum {
+    VAL_BOOL,
+    VAL_NIL,
+    VAL_NUMBER,
+    VAL_OBJ,
+} value_type_e;
+
+typedef struct {
+    value_type_e type;
+    union {
+        bool boolean;
+        double number;
+        obj_t *obj;
+    } as;
+} value_t;
+
+// Promote native C value to a clox value
+#define BOOL_VAL(value)  ((value_t){VAL_BOOL, {.boolean = value}})
+#define NIL_VAL          ((value_t){VAL_NIL, {.number = 0}}) // .number = 0, because it's the biggest in union
+#define NUMBER_VAL(value)((value_t){VAL_NUMBER, {.number = value}})
+#define OBJ_VAL(object)  ((value_t){VAL_OBJ, {.obj = (obj_t*)object}})
+
+// Unwrap clox value to a native C value (get)
+#define AS_BOOL(value)   ((value).as.boolean)
+#define AS_NUMBER(value) ((value).as.number)
+#define AS_OBJ(value)    ((value).as.obj)
+
+// Check values type
+#define IS_BOOL(value)   ((value).type == VAL_BOOL)
+#define IS_NIL(value)    ((value).type == VAL_NIL)
+#define IS_NUMBER(value) ((value).type == VAL_NUMBER)
+#define IS_OBJ(value)    ((value).type == VAL_OBJ)
 
 typedef struct {
     int capacity;
@@ -13,5 +49,6 @@ void init_value_array(value_array_t *array);
 void write_value_array(value_array_t *array, value_t value);
 void free_value_array(value_array_t *array);
 void print_value(value_t value);
+bool values_equal(value_t a, value_t b);
 
 #endif
