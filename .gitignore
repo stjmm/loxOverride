@@ -1,0 +1,52 @@
+# Ignore build directories
+/build/
+/.cache/
+
+# Ignore CMake-generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore common compiled object files
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.lib
+
+# Ignore shared libraries
+*.so
+*.dylib
+*.dll
+
+# Ignore executables
+*.exe
+*.out
+*.app
+
+# Ignore debugging files
+*.gch
+*.pch
+*.swp
+*.swo
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore core dumps
+core
+*.core
+
+# Ignore IDE/project-specific files
+.vscode/
+.idea/
+*.code-workspace
+
+# Keep important files explicitly
+!src/
+!CMakeLists.txt
+!README.md
+!.gitignore
