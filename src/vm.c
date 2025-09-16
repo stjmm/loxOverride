@@ -6,6 +6,7 @@
 #include "chunk.h"
 #include "debug.h"
 #include "compiler.h"
+#include "table.h"
 #include "value.h"
 #include "object.h"
 #include "memory.h"
@@ -34,10 +35,12 @@ static void runtime_error(const char *format, ...)
 void init_vm(void)
 {
     reset_stack();
+    init_table(&vm.strings);
 }
 
 void free_vm(void)
 {
+    free_table(&vm.strings);
     free_objects();
 }
 
@@ -63,19 +66,11 @@ static bool is_falsey(value_t value)
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
-static void concatenate(void)
+static obj_string_t *concatenate(value_t a_val, value_t b_val)
 {
-    obj_string_t *b = AS_STRING(pop());
-    obj_string_t *a = AS_STRING(pop());
-
-    int length = a->length + b->length;
-    char *chars = ALLOCATE(char, length + 1);
-    memcpy(chars, a->chars, a->length);
-    memcpy(chars + a->length, b->chars, b->length);
-    chars[length] = '\0';
-
-    obj_string_t *result = take_string(chars, length);
-    push(OBJ_VAL(result));
+    obj_string_t *a = IS_STRING(a_val) ? AS_STRING(a_val) : number_to_string(AS_NUMBER(a_val));
+    obj_string_t *b = IS_STRING(b_val) ? AS_STRING(b_val) : number_to_string(AS_NUMBER(b_val));
+    return concatenate_strings(a, b);
 }
 
 static interpret_result_e run(void)
@@ -127,12 +122,17 @@ static interpret_result_e run(void)
             case OP_GREATER:  BINARY_OP(BOOL_VAL, >); break;
             case OP_LESS:     BINARY_OP(BOOL_VAL, <); break;
             case OP_ADD: {
-                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                    concatenate();
-                } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                value_t b_val = vm.stack_top[-1];
+                value_t a_val = vm.stack_top[-2];
+                if (IS_NUMBER(a_val) && IS_NUMBER(b_val)) {
                     BINARY_OP(NUMBER_VAL, +);
+                } else if ((IS_STRING(a_val) || IS_NUMBER(a_val)) &&
+                    (IS_STRING(b_val) || IS_NUMBER(b_val))) {
+                    obj_string_t *result = concatenate(a_val, b_val);
+                    vm.stack_top[-2] = OBJ_VAL(result);
+                    vm.stack_top--;
                 } else {
-                    runtime_error("Operands must be two numbers or two string.");
+                    runtime_error("Operands must be numbers or strings.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;

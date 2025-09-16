@@ -20,9 +20,10 @@ struct obj_t {
 };
 
 struct obj_string_t {
-   obj_t obj;
+    obj_t obj;
     int length;
-    char *chars;
+    uint32_t hash;
+    char chars[];
 };
 
 static inline bool is_obj_type(value_t value, obj_type_e type)
@@ -30,8 +31,9 @@ static inline bool is_obj_type(value_t value, obj_type_e type)
     return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
 
-obj_string_t *take_string(char *chars, int length);
-obj_string_t *copy_string(const char *chars, int length);
+obj_string_t *allocate_string(const char *chars, int length);
+obj_string_t *concatenate_strings(obj_string_t *a, obj_string_t *b);
+obj_string_t *number_to_string(double number);
 void print_object(value_t value);
 
 #endif

@@ -2,6 +2,7 @@
 #define CLOX_VM_H
 
 #include "chunk.h"
+#include "table.h"
 
 #define STACK_MAX 256
 
@@ -10,6 +11,7 @@ typedef struct {
     uint8_t *ip; // Instruction pointer, points to bytecode instruction
     value_t stack[STACK_MAX]; // Stack for values (eg. OP_RETURN pops 1)
     value_t *stack_top; // Points to first empty stack element
+    table_t strings; // Interned strings
     obj_t *objects;
 } vm_t;
 

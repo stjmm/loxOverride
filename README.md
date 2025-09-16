@@ -40,3 +40,12 @@ So each `value_t` now has a type, and a union `as`. We change our compiler a lit
 
 # Chapter 6
 `obj_string_t` has `obj_t` as its first member. We can then cast `obj_string_t` to `obj_t` so our `value_t` has a pointer to the first element of the string -> so the string as well.
+Right now my concat number + string implementation allocates a `obj_strin_t` on a converted number.
+
+## Challenges
+- [x] flexible array member (chars in obj_string_t)
+- [x] concat strings, numbers and both
+
+# Chapter 7
+We use a hash map with linear probing. When we delete a entry, we want to set it to a tombstone, so we can find further entries, or return the first tombstone for setting for example.
+It uses it to intern ALL strings.

@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "object.h"
 #include "memory.h"
+#include "table.h"
+#include "value.h"
 #include "vm.h"
 
-#define ALLOCATE_OBJ(type, object_type) \
-    (type*)allocate_object(sizeof(type), object_type)
+#define ALLOCATE_OBJ(type, object_type, extra_size) \
+    (type*)allocate_object(sizeof(type) + (extra_size), object_type)
 
 static obj_t *allocate_object(size_t size, obj_type_e type)
 {
@@ -18,25 +21,53 @@ static obj_t *allocate_object(size_t size, obj_type_e type)
     return object;
 }
 
-static obj_string_t *allocate_string(char *chars, int length)
+static uint32_t hash_string(const char *key, int length)
 {
-    obj_string_t *string = ALLOCATE_OBJ(obj_string_t, OBJ_STRING);
+    uint32_t hash = 2166136261u;
+    for (int i = 0; i < length; i++) {
+        hash ^= (uint8_t)key[i];
+        hash *= 16777619;
+    }
+    return hash;
+}
+
+obj_string_t *allocate_string(const char *chars, int length)
+{
+    uint32_t hash = hash_string(chars, length);
+    obj_string_t *interned = table_find_string(&vm.strings, chars, length, hash);
+    if (interned != NULL) return interned;
+
+    obj_string_t *string = ALLOCATE_OBJ(obj_string_t, OBJ_STRING, length + 1);
     string->length = length;
-    string->chars = chars;
+    memcpy(string->chars, chars, length);
+    string->chars[length] = '\0';
+    string->hash = hash;
+
+    table_set(&vm.strings, string, NIL_VAL);
+
     return string;
 }
 
-obj_string_t *copy_string(const char *chars, int length)
+obj_string_t *concatenate_strings(obj_string_t *a, obj_string_t *b)
 {
-    char *heap_chars = ALLOCATE(char, length + 1);
-    memcpy(heap_chars, chars, length);
-    heap_chars[length] = '\0';
-    return allocate_string(heap_chars, length);
+    int length = a->length + b->length;
+
+    char *temp_chars = malloc(length + 1);
+    memcpy(temp_chars, a->chars, a->length);
+    memcpy(temp_chars + a->length, b->chars, b->length);
+    temp_chars[length] = '\0';
+
+    obj_string_t *result = allocate_string(temp_chars, length);
+    free(temp_chars);
+
+    return result;
 }
 
-obj_string_t *take_string(char *chars, int length)
-{
-    return allocate_string(chars, length);
+obj_string_t *number_to_string(double number) {
+    char buffer[32]; 
+    int length = snprintf(buffer, sizeof(buffer), "%.15g", number);
+
+    return allocate_string(buffer, length);
 }
 
 void print_object(value_t value)

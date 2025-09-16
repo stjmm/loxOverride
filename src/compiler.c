@@ -155,7 +155,7 @@ static void number(void)
 
 static void string(void)
 {
-    emit_constant(OBJ_VAL(copy_string(parser.previous.start + 1,
+    emit_constant(OBJ_VAL(allocate_string(parser.previous.start + 1,
                                       parser.previous.length - 2)));
 }
 

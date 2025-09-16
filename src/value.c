@@ -53,12 +53,7 @@ bool values_equal(value_t a, value_t b)
         case VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
         case VAL_NIL:    return true;
         case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
-        case VAL_OBJ: {
-            obj_string_t *a_string = AS_STRING(a);
-            obj_string_t *b_string = AS_STRING(b);
-            return a_string->length == b_string->length &&
-                memcmp(a_string->chars, b_string->chars, a_string->length) == 0;
-        }
+        case VAL_OBJ:    return AS_OBJ(a) == AS_OBJ(b);
         default:         return false;
     }
 }
