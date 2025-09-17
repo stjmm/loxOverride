@@ -49,3 +49,17 @@ Right now my concat number + string implementation allocates a `obj_strin_t` on 
 # Chapter 7
 We use a hash map with linear probing. When we delete a entry, we want to set it to a tombstone, so we can find further entries, or return the first tombstone for setting for example.
 It uses it to intern ALL strings.
+
+# Chapter 8
+Declaration - binds a new name to a value
+Statements - control flow, print etc.
+Declarations aren't allowed in control flow statements.
+statement      → exprStmt
+               | printStmt ;
+
+declaration    → varDecl
+               | statement ;
+We match and consume declarations, which may be many.
+To declare a variable we the identifier to constant table, eval the expression, which will get added on stack, and then add to the stack OP_DEFINE_GLOBAL and one or two bytes for idx. In vm we read it as a string (key) and set it the firsts stack val (value) to the globals hash table. For getting/setting we do a similar things in that we add the identifier as a new constant, and do OP_GET/SET and constant idx.
+
+# Chapter 9

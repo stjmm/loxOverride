@@ -11,6 +11,7 @@ typedef struct {
     uint8_t *ip; // Instruction pointer, points to bytecode instruction
     value_t stack[STACK_MAX]; // Stack for values (eg. OP_RETURN pops 1)
     value_t *stack_top; // Points to first empty stack element
+    table_t globals;
     table_t strings; // Interned strings
     obj_t *objects;
 } vm_t;

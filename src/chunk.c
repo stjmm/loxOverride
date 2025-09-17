@@ -32,27 +32,6 @@ void write_chunk(chunk_t *chunk, uint8_t byte, int line)
     chunk->count++;
 }
 
-bool write_constant(chunk_t *chunk, value_t value, int line)
-{
-    int constant = add_constant(chunk, value);
-
-    if (constant <= UINT8_MAX) {
-        write_chunk(chunk, OP_CONSTANT, line);
-        write_chunk(chunk, constant, line);
-
-        return true;
-    } else if (constant <= UINT16_MAX) {
-        // 16-bit index
-        write_chunk(chunk, OP_CONSTANT_16, line);
-        write_chunk(chunk, (constant >> 0) & 0xFF, line);
-        write_chunk(chunk, (constant >> 8) & 0xFF, line);
-
-        return true;
-    } else {
-        return false;
-    }
-}
-
 int add_constant(chunk_t *chunk, value_t value)
 {
     write_value_array(&chunk->constants, value);

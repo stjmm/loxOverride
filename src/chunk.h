@@ -11,6 +11,15 @@ typedef enum {
     OP_NIL,
     OP_TRUE,
     OP_FALSE,
+    OP_POP,
+    OP_GET_LOCAL,
+    OP_SET_LOCAL,
+    OP_DEFINE_GLOBAL,
+    OP_DEFINE_GLOBAL_16,
+    OP_SET_GLOBAL,
+    OP_SET_GLOBAL_16,
+    OP_GET_GLOBAL,
+    OP_GET_GLOBAL_16,
     OP_EQUAL,
     OP_GREATER,
     OP_LESS,
@@ -20,6 +29,7 @@ typedef enum {
     OP_DIVIDE,
     OP_NOT,
     OP_NEGATE,
+    OP_PRINT,
     OP_RETURN,
 } op_code_e;
 
@@ -34,7 +44,6 @@ typedef struct {
 
 void init_chunk(chunk_t *chunk);
 void write_chunk(chunk_t *chunk, uint8_t byte, int line);
-bool write_constant(chunk_t *chunk, value_t value, int lines);
 void free_chunk(chunk_t *chunk);
 int add_constant(chunk_t *chunk, value_t value);
 
