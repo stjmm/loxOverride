@@ -149,6 +149,7 @@ static interpret_result_e run(void)
             case OP_TRUE: push(BOOL_VAL(true)); break;
             case OP_FALSE: push(BOOL_VAL(false)); break;
             case OP_POP: pop(); break;
+            case OP_DUP: push(peek(0)); break;
             case OP_GET_LOCAL: {
                 uint8_t slot = READ_BYTE();
                 push(vm.stack[slot]);
@@ -200,7 +201,7 @@ static interpret_result_e run(void)
                 break;
             }
             case OP_SET_GLOBAL_16: {
-                obj_string_t *name = READ_STRING();
+                obj_string_t *name = READ_STRING_16();
                 if (table_set(&vm.globals, name, peek(0))) {
                     table_delete(&vm.globals, name);
                     runtime_error("Undefined variable '%s'.", name->chars);
@@ -220,6 +221,21 @@ static interpret_result_e run(void)
             case OP_PRINT: {
                 print_value(pop());
                 printf("\n");
+                break;
+            }
+            case OP_JUMP: {
+                uint16_t offset = READ_TWO_BYTES();
+                vm.ip += offset;
+                break;
+            }
+            case OP_JUMP_IF_FALSE: {
+                uint16_t offset = READ_TWO_BYTES();
+                if (is_falsey(peek(0))) vm.ip += offset;
+                break;
+            }
+            case OP_LOOP: {
+                uint16_t offset = READ_TWO_BYTES();
+                vm.ip -= offset;
                 break;
             }
             case OP_RETURN: {

@@ -442,7 +442,7 @@ static void while_statement(void)
 static void switch_statement(void)
 {
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'switch'.");
-    expression(); // Condition on the stack
+    expression(); // Stack
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
 
     // Switch (x)
@@ -451,48 +451,29 @@ static void switch_statement(void)
     int start_switch = current_chunk()->count;
     begin_control_context(start_switch, true);
 
-    bool has_default = false; // Only one default possible
-    bool has_case = false;
-
     while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
         if (match(TOKEN_CASE)) {
-            has_case = true;
-            emit_byte(OP_DUP); // Dup switch condition
-            expression();
+            emit_byte(OP_DUP);
+            expression(); // Parse constant for the case
+
             consume(TOKEN_COLON, "Expect ':' after case value.");
             
             emit_byte(OP_EQUAL);
+
             int case_jump = emit_jump(OP_JUMP_IF_FALSE);
-            emit_byte(OP_POP);
-
-            while (!check(TOKEN_CASE) && !check(TOKEN_DEFAULT) &&
-                    !check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
-                statement();
-            }
-
+            statement();
             patch_jump(case_jump);
-            emit_byte(OP_POP);
         } else if (match(TOKEN_DEFAULT)) {
-            if (has_default) {
-                error("Multiple 'default' labels in one switch.");
-            }
-            has_default = true;
-
-            consume(TOKEN_COLON, "Expect ':' after default.");
-
-            while (!check(TOKEN_CASE) && !check(TOKEN_DEFAULT) &&
-                    !check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
-                statement();
-            }
         } else {
             error("Expect 'case' or 'default'.");
             synchronize();
         }
     }
 
+    emit_byte(OP_POP); // Pop the dupped value
+
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after switch cases.");
     end_control_context();
-    emit_byte(OP_POP); // Pop the dupped value
 }
 
 static void break_statement(void)

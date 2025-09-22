@@ -12,6 +12,7 @@ typedef enum {
     OP_TRUE,
     OP_FALSE,
     OP_POP,
+    OP_DUP,
     OP_GET_LOCAL,
     OP_SET_LOCAL,
     OP_DEFINE_GLOBAL,
@@ -30,6 +31,9 @@ typedef enum {
     OP_NOT,
     OP_NEGATE,
     OP_PRINT,
+    OP_JUMP,
+    OP_JUMP_IF_FALSE,
+    OP_LOOP,
     OP_RETURN,
 } op_code_e;
 

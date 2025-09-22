@@ -63,3 +63,11 @@ We match and consume declarations, which may be many.
 To declare a variable we the identifier to constant table, eval the expression, which will get added on stack, and then add to the stack OP_DEFINE_GLOBAL and one or two bytes for idx. In vm we read it as a string (key) and set it the firsts stack val (value) to the globals hash table. For getting/setting we do a similar things in that we add the identifier as a new constant, and do OP_GET/SET and constant idx.
 
 # Chapter 9
+
+We emit clauses like OP_JUMP, or OP_JUMP_IF_FALSE or OP_LOOP, that either just jump, jump if evaluated false or jump back. Jumps can be 16bit.
+
+## Challenges
+- [x] ternary
+- [x] break/continue
+- [] switch, case, default
+add: modulus, ++, --

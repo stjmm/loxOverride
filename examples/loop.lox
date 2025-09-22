@@ -1,0 +1,9 @@
+var i = 7;
+
+switch (i) {
+    case 3: { i = 6; break; }
+    case 2 + 5: { i = 7; break; }
+    default: { break; }
+}
+
+print i;
