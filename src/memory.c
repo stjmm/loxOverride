@@ -25,6 +25,17 @@ static void free_object(obj_t *object)
             FREE(obj_string_t, string);
             break;
         }
+        case OBJ_FUNCTION: {
+            obj_function_t *function = (obj_function_t*)object;
+            free_chunk(&function->chunk);
+            FREE(obj_function_t, function);
+            break;
+        }
+        case OBJ_NATIVE: {
+            obj_native_t *native = (obj_native_t*)object;
+            FREE(obj_native_t, native);
+            break;
+        }
     }
 }
 

@@ -31,6 +31,31 @@ static uint32_t hash_string(const char *key, int length)
     return hash;
 }
 
+static void print_function(obj_function_t *function)
+{
+    if (function->name == NULL) {
+        printf("<script>");
+        return;
+    }
+    printf("<fn %s>", function->name->chars);
+}
+
+obj_native_t *new_native(native_fn function)
+{
+    obj_native_t *native = ALLOCATE_OBJ(obj_native_t, OBJ_NATIVE, 0);
+    native->function = function;
+    return native;
+}
+
+obj_function_t *new_function(void)
+{
+    obj_function_t *function = ALLOCATE_OBJ(obj_function_t, OBJ_FUNCTION, 0);
+    function->arity = 0;
+    function->name = NULL;
+    init_chunk(&function->chunk);
+    return function;
+}
+
 obj_string_t *allocate_string(const char *chars, int length)
 {
     uint32_t hash = hash_string(chars, length);
@@ -75,6 +100,12 @@ void print_object(value_t value)
     switch (OBJ_TYPE(value)) {
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
+            break;
+        case OBJ_FUNCTION:
+            print_function(AS_FUNCTION(value));
+            break;
+        case OBJ_NATIVE:
+            printf("<native fn>");
             break;
     }
 }

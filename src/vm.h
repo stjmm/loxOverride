@@ -1,14 +1,21 @@
 #ifndef CLOX_VM_H
 #define CLOX_VM_H
 
-#include "chunk.h"
+#include "object.h"
 #include "table.h"
 
-#define STACK_MAX 256
+#define FRAMES_MAX 64
+#define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 typedef struct {
-    chunk_t *chunk;
-    uint8_t *ip; // Instruction pointer, points to bytecode instruction
+    obj_function_t *function; // Which function is executed
+    uint8_t *ip; // Instruction pointer to that function chunk
+    value_t *slots; // Where this functions local variables start in the vm stack
+} call_frame_t;
+
+typedef struct {
+    call_frame_t frames[FRAMES_MAX];
+    int frame_count;
     value_t stack[STACK_MAX]; // Stack for values (eg. OP_RETURN pops 1)
     value_t *stack_top; // Points to first empty stack element
     table_t globals;

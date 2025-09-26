@@ -1,9 +1,5 @@
-var i = 7;
-
-switch (i) {
-    case 3: { i = 6; break; }
-    case 2 + 5: { i = 7; break; }
-    default: { break; }
+fun a(x) {
+	return "hello " + x;
 }
 
-print i;
+print a(5);

@@ -69,5 +69,5 @@ We emit clauses like OP_JUMP, or OP_JUMP_IF_FALSE or OP_LOOP, that either just j
 ## Challenges
 - [x] ternary
 - [x] break/continue
-- [] switch, case, default
+- [x] switch, case, default
 add: modulus, ++, --
