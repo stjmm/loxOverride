@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 
 #include "vm.h"
 #include "chunk.h"
@@ -11,13 +10,9 @@
 #include "value.h"
 #include "object.h"
 #include "memory.h"
+#include "native.h"
 
 vm_t vm;
-
-static value_t clock_native(int arg_count, value_t *args)
-{
-    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
-}
 
 static void reset_stack(void)
 {
@@ -66,6 +61,7 @@ void init_vm(void)
     init_table(&vm.strings);
 
     define_native("clock", clock_native);
+    define_native("input", input_native);
 }
 
 void free_vm(void)

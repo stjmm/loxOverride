@@ -1,0 +1,9 @@
+fun printTime() {
+    print "The current time is " + clock();
+}
+
+var i = 0;
+while (i < 5) {
+    printTime();
+    i = i + 1;
+}
