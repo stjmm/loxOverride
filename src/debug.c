@@ -3,6 +3,7 @@
 
 #include "debug.h"
 #include "chunk.h"
+#include "object.h"
 #include "value.h"
 
 void dissasemble_chunk(chunk_t *chunk, const char *name)
@@ -99,6 +100,10 @@ int dissasemble_instruction(chunk_t *chunk, int offset)
             return constant_instruction("OP_SET_GLOBAL", chunk, offset);
         case OP_SET_GLOBAL_16:
             return constant_16_instruction("OP_SET_GLOBAL_16", chunk, offset);
+        case OP_GET_UPVALUE:
+            return byte_instruction("OP_GET_UPVALUE", chunk, offset);
+        case OP_SET_UPVALUE:
+            return byte_instruction("OP_SET_UPVALUE", chunk, offset);
         case OP_EQUAL:
             return simple_instruction("OP_EQUAL", offset);
         case OP_GREATER:
@@ -133,6 +138,16 @@ int dissasemble_instruction(chunk_t *chunk, int offset)
             printf("%-16s %4d ", "OP_CLOSURE", constant);
             print_value(chunk->constants.values[constant]);
             printf("\n");
+
+            obj_function_t *function = AS_FUNCTION(
+                chunk->constants.values[constant]);
+            for (int j = 0; j < function->upvalue_count; j++) {
+                int is_local = chunk->code[offset++];
+                int index = chunk->code[offset++];
+                printf("%04d    |                       %s %d\n",
+                       offset - 2, is_local ? "local" : "upvalue", index);
+            }
+
             return offset;
         }
         case OP_RETURN:

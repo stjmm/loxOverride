@@ -22,6 +22,7 @@ typedef enum {
     OBJ_NATIVE,
     OBJ_FUNCTION,
     OBJ_CLOSURE,
+    OBJ_UPVALUE,
 } obj_type_e;
 
 struct obj_t {
@@ -36,9 +37,15 @@ struct obj_string_t {
     char chars[];
 };
 
+typedef struct obj_upvalue_t {
+    obj_t obj;
+    value_t *location;
+} obj_upvalue_t;
+
 typedef struct {
     obj_t obj;
     int arity;
+    int upvalue_count;
     chunk_t chunk;
     obj_string_t *name;
 } obj_function_t;
@@ -46,6 +53,8 @@ typedef struct {
 typedef struct {
     obj_t obj;
     obj_function_t *function;
+    obj_upvalue_t **upvalues;
+    int upvalue_count;
 } obj_closure_t;
 
 typedef value_t (*native_fn)(int arg_count, value_t *args);
@@ -62,6 +71,7 @@ static inline bool is_obj_type(value_t value, obj_type_e type)
 
 obj_function_t *new_function(void);
 obj_closure_t *new_closure(obj_function_t *function);
+obj_upvalue_t *new_upvalue(value_t *slot);
 obj_native_t *new_native(native_fn function);
 obj_string_t *allocate_string(const char *chars, int length);
 obj_string_t *concatenate_strings(obj_string_t *a, obj_string_t *b);

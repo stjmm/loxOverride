@@ -35,7 +35,7 @@ static void runtime_error(const char *format, ...)
         fprintf(stderr, "[line %d] in ",
                 function->chunk.lines[instruction]);
         if (function->name == NULL) {
-            fprintf(stderr, "scrpit\n");
+            fprintf(stderr, "script\n");
         } else {
             fprintf(stderr, "%s()\n", function->name->chars);
         }
@@ -129,6 +129,12 @@ static bool call_value(value_t calle, int arg_count)
     return false;
 }
 
+static obj_upvalue_t *capture_upvalue(value_t *local)
+{
+    obj_upvalue_t *created_upvalue = new_upvalue(local);
+    return created_upvalue;
+}
+
 static bool is_falsey(value_t value)
 {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
@@ -184,6 +190,16 @@ static interpret_result_e run(void)
                 uint16_t offset = READ_TWO_BYTES();
                 value_t constant = frame->closure->function->chunk.constants.values[offset];
                 push(constant);
+                break;
+            }
+            case OP_GET_UPVALUE: {
+                uint8_t slot = READ_BYTE();
+                push(*frame->closure->upvalues[slot]->location);
+                break;
+            }
+            case OP_SET_UPVALUE: {
+                uint8_t slot = READ_BYTE();
+                *frame->closure->upvalues[slot]->location = peek(0);
                 break;
             }
             case OP_EQUAL: {
@@ -317,6 +333,15 @@ static interpret_result_e run(void)
                 obj_function_t *function = AS_FUNCTION(READ_CONSTANT());
                 obj_closure_t *closure = new_closure(function);
                 push(OBJ_VAL(closure));
+                for (int i = 0; i < closure->upvalue_count; i++) {
+                    uint8_t is_local = READ_BYTE();
+                    uint8_t index = READ_BYTE();
+                    if (is_local) {
+                        closure->upvalues[i] = capture_upvalue(frame->slots + index);
+                    } else {
+                        closure->upvalues[i] = frame->closure->upvalues[index];
+                    }
+                }
                 break;
             }
             case OP_RETURN: {

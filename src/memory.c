@@ -35,6 +35,9 @@ static void free_object(obj_t *object)
             FREE(obj_closure_t, object);
             break;
         }
+        case OBJ_UPVALUE:
+            FREE(obj_upvalue_t, object);
+            break;
         case OBJ_NATIVE: {
             obj_native_t *native = (obj_native_t*)object;
             FREE(obj_native_t, native);

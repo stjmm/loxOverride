@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +48,11 @@ typedef struct {
     int depth; // Its depth
 } local_t;
 
+typedef struct {
+    uint8_t index;
+    bool is_local;
+} upvalue_t;
+
 typedef enum {
     TYPE_FUNCTION,
     TYPE_SCRIPT,
@@ -68,6 +74,8 @@ typedef struct compiler_t {
     local_t locals[UINT8_COUNT];
     int local_count;
     int scope_depth;
+
+    upvalue_t upvalues[UINT8_COUNT];
     
     control_context_t control_stack[16]; // TODO: Check break jumps and control_stack count
     int control_stack_top;
@@ -328,6 +336,7 @@ static parse_rule_t *get_rule(token_type_e type);
 static void parse_precedence(precedence_e precedence);
 static void mark_initialized(void);
 static int identifier_constant(token_t *name);
+static int resolve_upvalue(compiler_t *compiler, token_t *name);
 static int resolve_local(compiler_t *compiler, token_t *name);
 static int parse_variable(const char *error_message);
 static void define_variable(int global);
@@ -370,6 +379,11 @@ static void function(function_type_e type)
 
     obj_function_t *function = end_compiler();
     emit_bytes(OP_CLOSURE, make_constant(OBJ_VAL(function)));
+
+    for (int i = 0; i < function->upvalue_count; i++) {
+        emit_byte(compiler.upvalues[i].is_local ? 1 : 0);
+        emit_byte(compiler.upvalues[i].index);
+    }
 }
 
 static void fun_declaration(void)
@@ -684,6 +698,13 @@ static void named_variable(token_t name, bool can_assign)
         } else {
             emit_bytes(OP_GET_LOCAL, (uint8_t)arg);
         }
+    } else if ((arg = resolve_upvalue(current, &name)) != -1) {
+        if (can_assign && match(TOKEN_EQUAL)) {
+            expression();
+            emit_bytes(OP_SET_UPVALUE, (uint8_t)arg);
+        } else {
+            emit_bytes(OP_GET_UPVALUE, (uint8_t)arg);
+        }
     } else {
         arg = identifier_constant(&name);
         if (arg <= UINT8_MAX) {
@@ -708,7 +729,6 @@ static void named_variable(token_t name, bool can_assign)
             error("Too many constants. 16-bit max.");
         }
     }
-
 }
 
 static void variable(bool can_assign)
@@ -910,6 +930,47 @@ static int resolve_local(compiler_t *compiler, token_t *name)
             }
             return i;
         }
+    }
+
+    return -1;
+}
+
+// Returns index to upvalue in closure's upvalues array
+// That index is the operand to the OP_..._UPVALUE
+static int add_upvalue(compiler_t *compiler, uint8_t index, bool is_local)
+{
+    int upvalue_count = compiler->function->upvalue_count;
+
+    for (int i = 0; i < upvalue_count; i++) {
+        upvalue_t *upvalue = &compiler->upvalues[i];
+        if (upvalue->index == index && upvalue->is_local == is_local) {
+            return i;
+        }
+    }
+
+    if (upvalue_count == UINT8_COUNT) {
+        error("Too many closure variables in function.");
+        return 0;
+    }
+
+    compiler->upvalues[upvalue_count].is_local = is_local;
+    compiler->upvalues[upvalue_count].index = index;
+    return compiler->function->upvalue_count++;
+}
+
+static int resolve_upvalue(compiler_t *compiler, token_t *name)
+{
+    if (compiler->enclosing == NULL) return -1;
+
+    int local = resolve_local(compiler->enclosing, name);
+    if (local != -1) {
+        return add_upvalue(compiler, (uint8_t)local, true);
+    }
+
+    int upvalue = resolve_upvalue(compiler->enclosing, name);
+    printf("upvalue index: %d\n", upvalue);
+    if (upvalue != -1) {
+        return add_upvalue(compiler, (uint8_t)upvalue, false);
     }
 
     return -1;
