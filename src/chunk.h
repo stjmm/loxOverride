@@ -1,7 +1,6 @@
 #ifndef CLOX_CHUNK_H
 #define CLOX_CHUNK_H
 
-#include "common.h"
 #include "value.h"
 
 // Bytecode operations
@@ -34,6 +33,7 @@ typedef enum {
     OP_JUMP,
     OP_JUMP_IF_FALSE,
     OP_LOOP,
+    OP_CLOSURE,
     OP_CALL,
     OP_RETURN,
 } op_code_e;

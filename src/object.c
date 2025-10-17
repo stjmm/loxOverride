@@ -40,6 +40,13 @@ static void print_function(obj_function_t *function)
     printf("<fn %s>", function->name->chars);
 }
 
+obj_closure_t *new_closure(obj_function_t *function)
+{
+    obj_closure_t *closure = ALLOCATE_OBJ(obj_closure_t, OBJ_CLOSURE, 0);
+    closure->function = function;
+    return closure;
+}
+
 obj_native_t *new_native(native_fn function)
 {
     obj_native_t *native = ALLOCATE_OBJ(obj_native_t, OBJ_NATIVE, 0);
@@ -103,6 +110,9 @@ void print_object(value_t value)
             break;
         case OBJ_FUNCTION:
             print_function(AS_FUNCTION(value));
+            break;
+        case OBJ_CLOSURE:
+            print_function(AS_CLOSURE(value)->function);
             break;
         case OBJ_NATIVE:
             printf("<native fn>");

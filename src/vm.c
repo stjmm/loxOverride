@@ -30,7 +30,7 @@ static void runtime_error(const char *format, ...)
 
     for (int i = vm.frame_count - 1; i >= 0; i--) {
         call_frame_t *frame = &vm.frames[i];
-        obj_function_t *function = frame->function;
+        obj_function_t *function = frame->closure->function;
         size_t instruction = frame->ip - function->chunk.code - 1;
         fprintf(stderr, "[line %d] in ",
                 function->chunk.lines[instruction]);
@@ -88,11 +88,11 @@ static value_t peek(int distance)
     return vm.stack_top[-1 - distance];
 }
 
-static bool call(obj_function_t *function, int arg_count)
+static bool call(obj_closure_t *closure, int arg_count)
 {
-    if (arg_count != function->arity) {
+    if (arg_count != closure->function->arity) {
         runtime_error("Expected %d arguments but got %d.",
-                      function->arity, arg_count);
+                      closure->function->arity, arg_count);
         return false;
     }
 
@@ -102,8 +102,8 @@ static bool call(obj_function_t *function, int arg_count)
     }
 
     call_frame_t *frame = &vm.frames[vm.frame_count++];
-    frame->function = function;
-    frame->ip = function->chunk.code;
+    frame->closure = closure;
+    frame->ip = closure->function->chunk.code;
     frame->slots = vm.stack_top - arg_count - 1;
     return true;
 }
@@ -112,8 +112,8 @@ static bool call_value(value_t calle, int arg_count)
 {
     if (IS_OBJ(calle)) {
         switch (OBJ_TYPE(calle)) {
-            case OBJ_FUNCTION:
-                return call(AS_FUNCTION(calle), arg_count);
+            case OBJ_CLOSURE:
+                return call(AS_CLOSURE(calle), arg_count);
             case OBJ_NATIVE: {
                 native_fn native = AS_NATIVE(calle);
                 value_t result = native(arg_count, vm.stack_top - arg_count);
@@ -147,8 +147,8 @@ static interpret_result_e run(void)
 
 #define READ_BYTE() (*frame->ip++)
 #define READ_TWO_BYTES() ((uint16_t)(READ_BYTE() | (READ_BYTE() << 8)))
-#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
-#define READ_CONSTANT_16() (frame->function->chunk.constants.values[READ_TWO_BYTES()]) 
+#define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT_16() (frame->closure->function->chunk.constants.values[READ_TWO_BYTES()]) 
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define READ_STRING_16() AS_STRING(READ_CONSTANT_16())
 #define BINARY_OP(value_type, op) \
@@ -170,8 +170,8 @@ static interpret_result_e run(void)
             printf("]");
         }
         printf("\n");
-        dissasemble_instruction(&frame->function->chunk,
-                    (int)(frame->ip - frame->function->chunk.code));
+        dissasemble_instruction(&frame->closure->function->chunk,
+                    (int)(frame->ip - frame->closure->function->chunk.code));
 #endif
         uint8_t instruction = READ_BYTE();
         switch (instruction) {
@@ -182,7 +182,7 @@ static interpret_result_e run(void)
             }
             case OP_CONSTANT_16: {
                 uint16_t offset = READ_TWO_BYTES();
-                value_t constant = frame->function->chunk.constants.values[offset];
+                value_t constant = frame->closure->function->chunk.constants.values[offset];
                 push(constant);
                 break;
             }
@@ -313,6 +313,12 @@ static interpret_result_e run(void)
                 frame = &vm.frames[vm.frame_count - 1];
                 break;
             }
+            case OP_CLOSURE: {
+                obj_function_t *function = AS_FUNCTION(READ_CONSTANT());
+                obj_closure_t *closure = new_closure(function);
+                push(OBJ_VAL(closure));
+                break;
+            }
             case OP_RETURN: {
                 value_t result = pop();
                 vm.frame_count--;
@@ -344,7 +350,10 @@ interpret_result_e interpret(const char *source)
     if (function == NULL) return INTERPRET_COMPILE_ERROR;
 
     push(OBJ_VAL(function));
-    call(function, 0);
+    obj_closure_t *closure = new_closure(function);
+    pop();
+    push(OBJ_VAL(closure));
+    call(closure, 0);
 
     return run();
 }

@@ -8,7 +8,7 @@
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
 
 typedef struct {
-    obj_function_t *function; // Which function is executed
+    obj_closure_t *closure; // Which function is executed
     uint8_t *ip; // Instruction pointer to that function chunk
     value_t *slots; // Where this functions local variables start in the vm stack
 } call_frame_t;
