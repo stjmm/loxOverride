@@ -58,6 +58,8 @@ obj_upvalue_t *new_upvalue(value_t *slot)
 {
     obj_upvalue_t *upvalue = ALLOCATE_OBJ(obj_upvalue_t, OBJ_UPVALUE, 0);
     upvalue->location = slot;
+    upvalue->closed = NIL_VAL;
+    upvalue->next = NULL;
     return upvalue;
 }
 

@@ -40,6 +40,8 @@ struct obj_string_t {
 typedef struct obj_upvalue_t {
     obj_t obj;
     value_t *location;
+    value_t closed;
+    struct obj_upvalue_t *next;
 } obj_upvalue_t;
 
 typedef struct {

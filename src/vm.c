@@ -18,6 +18,7 @@ static void reset_stack(void)
 {
     vm.stack_top = vm.stack;
     vm.frame_count = 0;
+    vm.open_upvalues = NULL;
 }
 
 static void runtime_error(const char *format, ...)
@@ -131,8 +132,38 @@ static bool call_value(value_t calle, int arg_count)
 
 static obj_upvalue_t *capture_upvalue(value_t *local)
 {
+    obj_upvalue_t *prev_upvalue = NULL;
+    obj_upvalue_t *upvalue = vm.open_upvalues;
+    while (upvalue != NULL && upvalue->location > local) {
+        prev_upvalue = upvalue;
+        upvalue = upvalue->next;
+    }
+
+    if (upvalue != NULL && upvalue->location == local) {
+        return upvalue;
+    }
+
     obj_upvalue_t *created_upvalue = new_upvalue(local);
+    created_upvalue->next = upvalue;
+
+    if (prev_upvalue == NULL) {
+        vm.open_upvalues = created_upvalue;
+    } else {
+        prev_upvalue->next = created_upvalue;
+    }
+
     return created_upvalue;
+}
+
+static void close_upvalues(value_t *last)
+{
+    while (vm.open_upvalues != NULL &&
+           vm.open_upvalues->location >= last) {
+        obj_upvalue_t *upvalue = vm.open_upvalues;
+        upvalue->closed = *upvalue->location;
+        upvalue->location = &upvalue->closed;
+        vm.open_upvalues =  upvalue->next;
+    }
 }
 
 static bool is_falsey(value_t value)
@@ -344,8 +375,14 @@ static interpret_result_e run(void)
                 }
                 break;
             }
+            case OP_CLOSE_UPVALUE: {
+                close_upvalues(vm.stack_top - 1);
+                pop();
+                break;
+            }
             case OP_RETURN: {
                 value_t result = pop();
+                close_upvalues(frame->slots);
                 vm.frame_count--;
                 if (vm.frame_count == 0) {
                     pop();

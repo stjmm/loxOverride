@@ -20,6 +20,7 @@ typedef struct {
     value_t *stack_top; // Points to first empty stack element
     table_t globals;
     table_t strings; // Interned strings
+    obj_upvalue_t *open_upvalues;
     obj_t *objects;
 } vm_t;
 
