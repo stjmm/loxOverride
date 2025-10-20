@@ -15,9 +15,15 @@ static obj_t *allocate_object(size_t size, obj_type_e type)
 {
     obj_t *object = (obj_t*)reallocate(NULL, 0, size);
     object->type = type;
+    object->is_marked = false;
 
     object->next = vm.objects;
     vm.objects = object;
+
+#ifdef DEBUG_LOG_GC
+    printf("%p allocate %zu for %d\n", (void*)object, size, type);
+#endif
+
     return object;
 }
 

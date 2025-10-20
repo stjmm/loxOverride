@@ -71,3 +71,6 @@ We emit clauses like OP_JUMP, or OP_JUMP_IF_FALSE or OP_LOOP, that either just j
 - [x] break/continue
 - [x] switch, case, default
 add: modulus, ++, --
+
+# Chapter 26
+Roots - objects that the VM can reach directly

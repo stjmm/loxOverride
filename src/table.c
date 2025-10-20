@@ -132,3 +132,12 @@ obj_string_t *table_find_string(table_t *table, const char *chars, int length, u
         index = (index + 1) % table->capacity;
     }
 }
+
+void mark_table(table_t *table)
+{
+    for (int i = 0; i < table->count; i++) {
+        entry_t *entry = &table->entries[i];
+        mark_object((obj_t*)entry->key);
+        mark_value(entry->value);
+    }
+}
