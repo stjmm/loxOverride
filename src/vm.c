@@ -387,6 +387,10 @@ static interpret_result_e run(void)
                 pop();
                 break;
             }
+            case OP_CLASS: {
+                push(OBJ_VAL(new_class(READ_STRING())));
+                break;
+            }
             case OP_RETURN: {
                 value_t result = pop();
                 close_upvalues(frame->slots);

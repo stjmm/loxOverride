@@ -152,6 +152,8 @@ int dissasemble_instruction(chunk_t *chunk, int offset)
 
             return offset;
         }
+        case OP_CLASS:
+            return constant_instruction("OP_CLASS", chunk, offset);
         case OP_RETURN:
             return simple_instruction("OP_RETURN", offset);
         default:

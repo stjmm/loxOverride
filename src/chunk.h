@@ -38,6 +38,7 @@ typedef enum {
     OP_LOOP,
     OP_CLOSURE,
     OP_CALL,
+    OP_CLASS,
     OP_RETURN,
 } op_code_e;
 

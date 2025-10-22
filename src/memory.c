@@ -45,6 +45,7 @@ static void free_object(obj_t *object)
     switch (object->type) {
         case OBJ_STRING: {
             obj_string_t *string = (obj_string_t*)object;
+            FREE_ARRAY(char, string->chars, string->length + 1);
             FREE(obj_string_t, string);
             break;
         }
@@ -55,6 +56,8 @@ static void free_object(obj_t *object)
             break;
         }
         case OBJ_CLOSURE: {
+            obj_closure_t *closure = (obj_closure_t*)object;
+            FREE_ARRAY(obj_upvalue_t*, closure->upvalues, closure->upvalue_count);
             FREE(obj_closure_t, object);
             break;
         }
@@ -64,6 +67,10 @@ static void free_object(obj_t *object)
         case OBJ_NATIVE: {
             obj_native_t *native = (obj_native_t*)object;
             FREE(obj_native_t, native);
+            break;
+        }
+        case OBJ_CLASS: {
+            FREE(obj_class_t, object);
             break;
         }
     }
@@ -129,6 +136,11 @@ static void blacken_object(obj_t *object)
         case OBJ_UPVALUE:
             mark_value(((obj_upvalue_t*)object)->closed);
             break;
+        case OBJ_CLASS: {
+            obj_class_t *klass = (obj_class_t*)object;
+            mark_object((obj_t*)klass->name);
+            break;
+        }
         case OBJ_NATIVE:
         case OBJ_STRING:
             break;
@@ -194,8 +206,8 @@ void collect_garbage(void)
 
     mark_roots();
     trace_references(); // After this all objects are either black or white (only using is_marked)
-    sweep();
     table_remove_white(&vm.strings);
+    sweep();
 
     vm.next_gc = vm.bytes_allocated * GC_HEAP_GROW_FACTOR;
 

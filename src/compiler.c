@@ -344,6 +344,7 @@ static void parse_precedence(precedence_e precedence);
 static void mark_initialized(void);
 static int identifier_constant(token_t *name);
 static int resolve_upvalue(compiler_t *compiler, token_t *name);
+static void declare_variable(void);
 static int resolve_local(compiler_t *compiler, token_t *name);
 static int parse_variable(const char *error_message);
 static void define_variable(int global);
@@ -391,6 +392,19 @@ static void function(function_type_e type)
         emit_byte(compiler.upvalues[i].is_local ? 1 : 0);
         emit_byte(compiler.upvalues[i].index);
     }
+}
+
+static void class_declaration(void)
+{
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    uint8_t name_constant = identifier_constant(&parser.previous);
+    declare_variable();
+
+    emit_bytes(OP_CLASS, name_constant);
+    define_variable(name_constant);
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' before class body.");
 }
 
 static void fun_declaration(void)
@@ -637,7 +651,9 @@ static void continue_statement(void)
 
 static void declaration(void)
 {
-    if (match(TOKEN_FUN)) {
+    if (match(TOKEN_CLASS)) {
+        class_declaration();
+    } else if (match(TOKEN_FUN)) {
         fun_declaration();
     } else if (match(TOKEN_VAR)) {
         var_declaration();
@@ -910,8 +926,8 @@ static void parse_precedence(precedence_e precedence)
 
 static int identifier_constant(token_t *name)
 {
-    return add_constant(current_chunk(), OBJ_VAL(allocate_string(name->start,
-                                                                 name->length)));
+    obj_string_t *interned = allocate_string(name->start, name->length);
+    return add_constant(current_chunk(), OBJ_VAL(interned));
 }
 
 static bool identifiers_equal(token_t *a, token_t *b)

@@ -96,7 +96,7 @@ bool table_delete(table_t *table, obj_string_t *key)
     if (table->count == 0) return false;
 
     entry_t *entry = find_entry(table->entries, table->capacity, key);
-    if (entry == NULL) return false;
+    if (entry->key == NULL) return false;
 
     // tombstone entry: NULL, BOOL_VAL(true)
     entry->key = NULL;
@@ -135,7 +135,7 @@ obj_string_t *table_find_string(table_t *table, const char *chars, int length, u
 
 void mark_table(table_t *table)
 {
-    for (int i = 0; i < table->count; i++) {
+    for (int i = 0; i < table->capacity; i++) {
         entry_t *entry = &table->entries[i];
         mark_object((obj_t*)entry->key);
         mark_value(entry->value);

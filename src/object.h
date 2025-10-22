@@ -8,12 +8,14 @@
 
 #define IS_FUNCTION(value) is_obj_type(value, OBJ_FUNCTION);
 #define IS_CLOSURE(value)  is_obj_type(value, OBJ_CLOSURE);
+#define IS_CLASS(value)    is_obj_type(value, OBJ_CLASS);
 #define IS_NATIVE(value)   is_obj_type(value, OBJ_NATIVE)
 #define IS_STRING(value)   is_obj_type(value, OBJ_STRING)
 
 #define AS_FUNCTION(value)((obj_function_t*)AS_OBJ(value))
 #define AS_CLOSURE(value) ((obj_closure_t*)AS_OBJ(value))
 #define AS_NATIVE(value)  (((obj_native_t*)AS_OBJ(value))->function)
+#define AS_CLASS(value)   ((obj_class_t*)AS_OBJ(value))
 #define AS_STRING(value)  ((obj_string_t*)AS_OBJ(value))
 #define AS_CSTRING(value) (((obj_string_t*)AS_OBJ(value))->chars)
 
@@ -23,6 +25,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_CLOSURE,
     OBJ_UPVALUE,
+    OBJ_CLASS,
 } obj_type_e;
 
 struct obj_t {
@@ -60,6 +63,11 @@ typedef struct {
     int upvalue_count;
 } obj_closure_t;
 
+typedef struct {
+    obj_t obj;
+    obj_string_t *name;
+} obj_class_t;
+
 typedef value_t (*native_fn)(int arg_count, value_t *args);
 
 typedef struct {
@@ -76,6 +84,7 @@ obj_function_t *new_function(void);
 obj_closure_t *new_closure(obj_function_t *function);
 obj_upvalue_t *new_upvalue(value_t *slot);
 obj_native_t *new_native(native_fn function);
+obj_class_t *new_class(obj_string_t *name);
 obj_string_t *allocate_string(const char *chars, int length);
 obj_string_t *concatenate_strings(obj_string_t *a, obj_string_t *b);
 obj_string_t *number_to_string(double number);

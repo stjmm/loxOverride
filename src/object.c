@@ -86,6 +86,14 @@ obj_function_t *new_function(void)
     return function;
 }
 
+obj_class_t *new_class(obj_string_t *name)
+{
+    // klass because c++ compiler
+    obj_class_t *klass = ALLOCATE_OBJ(obj_class_t, OBJ_CLASS, 0);
+    klass->name = name;
+    return klass;
+}
+
 obj_string_t *allocate_string(const char *chars, int length)
 {
     uint32_t hash = hash_string(chars, length);
@@ -144,6 +152,9 @@ void print_object(value_t value)
             break;
         case OBJ_NATIVE:
             printf("<native fn>");
+            break;
+        case OBJ_CLASS:
+            printf("%s", AS_CLASS(value)->name->chars);
             break;
     }
 }
