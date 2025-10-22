@@ -98,7 +98,9 @@ obj_string_t *allocate_string(const char *chars, int length)
     string->chars[length] = '\0';
     string->hash = hash;
 
+    push(OBJ_VAL(string));
     table_set(&vm.strings, string, NIL_VAL);
+    pop();
 
     return string;
 }

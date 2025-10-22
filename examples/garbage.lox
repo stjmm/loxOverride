@@ -1,0 +1,22 @@
+print "Switch version:";
+
+for (var i = 0; i < 5; i = i + 1) {
+    print "i = " + i;
+
+    switch (i) {
+        case 0:
+            print "Start of loop.";
+            break;
+        case 2:
+            print "Halfway there!";
+            break;
+        case 4:
+            print "Last iteration!";
+            break;
+        default:
+            print "Just another number.";
+            break;
+    }
+}
+
+print "All done!";

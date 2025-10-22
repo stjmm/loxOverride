@@ -74,3 +74,4 @@ add: modulus, ++, --
 
 # Chapter 26
 Roots - objects that the VM can reach directly
+We want to go through object and mark the current object black and objects the black refrences gray until no more gray. Then we sweep the white ones.

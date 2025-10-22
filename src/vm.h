@@ -21,7 +21,12 @@ typedef struct {
     table_t globals;
     table_t strings; // Interned strings
     obj_upvalue_t *open_upvalues;
+    size_t bytes_allocated;
+    size_t next_gc;
     obj_t *objects;
+    int gray_count;
+    int gray_capacity;
+    obj_t **gray_stack;
 } vm_t;
 
 typedef enum {
