@@ -44,6 +44,10 @@ static void free_object(obj_t *object)
 #endif
 
     switch (object->type) {
+        case OBJ_BOUND_METHOD: {
+            FREE(obj_bound_method_t, object);
+            break;
+        }
         case OBJ_FUNCTION: {
             obj_function_t *function = (obj_function_t*)object;
             free_chunk(&function->chunk);
@@ -62,6 +66,8 @@ static void free_object(obj_t *object)
             break;
         }
         case OBJ_CLASS: {
+            obj_class_t *klass = (obj_class_t*)object;
+            free_table(&klass->methods);
             FREE(obj_class_t, object);
             break;
         }
@@ -125,6 +131,12 @@ static void blacken_object(obj_t *object)
 #endif
 
     switch (object->type) {
+        case OBJ_BOUND_METHOD: {
+            obj_bound_method_t *bound = (obj_bound_method_t*)object;
+            mark_value(bound->receiver);
+            mark_object((obj_t*)bound->method);
+            break;
+        }
         case OBJ_CLOSURE: {
             obj_closure_t *closure = (obj_closure_t*)object;
             mark_object((obj_t*)closure->function);
@@ -145,6 +157,7 @@ static void blacken_object(obj_t *object)
         case OBJ_CLASS: {
             obj_class_t *klass = (obj_class_t*)object;
             mark_object((obj_t*)klass->name);
+            mark_table(&klass->methods);
             break;
         }
         case OBJ_INSTANCE: {

@@ -58,6 +58,7 @@ typedef struct {
 typedef enum {
     TYPE_FUNCTION,
     TYPE_SCRIPT,
+    TYPE_METHOD,
 } function_type_e;
 
 typedef struct {
@@ -83,8 +84,13 @@ typedef struct compiler_t {
     int control_stack_top;
 } compiler_t;
 
+typedef struct class_compiler_t {
+    struct class_compiler_t *enclosing;
+} class_compiler_t;
+
 parser_t parser;
 compiler_t *current = NULL;
+class_compiler_t *current_class = NULL;
 
 static chunk_t *current_chunk(void)
 {
@@ -246,8 +252,13 @@ static void init_compiler(compiler_t *compiler, function_type_e type)
     local_t *local = &current->locals[current->local_count++];
     local->depth = 0;
     local->is_captured = false;
-    local->name.start = "";
-    local->name.length = 0;
+    if (type != TYPE_FUNCTION) {
+        local->name.start = "this";
+        local->name.length = 4;
+    } else {
+        local->name.start = "";
+        local->name.length = 0;
+    }
 }
 
 static obj_function_t *end_compiler(void)
@@ -394,17 +405,40 @@ static void function(function_type_e type)
     }
 }
 
+static void method(void)
+{
+    consume(TOKEN_IDENTIFIER, "Expect method name.");
+    uint8_t constant = identifier_constant(&parser.previous);
+
+    function_type_e type = TYPE_METHOD;
+    function(type);
+
+    emit_bytes(OP_METHOD, constant);
+}
+
 static void class_declaration(void)
 {
     consume(TOKEN_IDENTIFIER, "Expect class name.");
+    token_t class_name = parser.previous;
     uint8_t name_constant = identifier_constant(&parser.previous);
     declare_variable();
 
     emit_bytes(OP_CLASS, name_constant);
     define_variable(name_constant);
 
+    class_compiler_t class_compiler;
+    class_compiler.enclosing = current_class;
+    current_class = &class_compiler;
+
+    named_variable(class_name, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
     consume(TOKEN_RIGHT_BRACE, "Expect '}' before class body.");
+    emit_byte(OP_POP);
+
+    current_class = current_class->enclosing;
 }
 
 static void fun_declaration(void)
@@ -759,6 +793,16 @@ static void variable(bool can_assign)
     named_variable(parser.previous, can_assign);
 }
 
+static void this_(bool can_assign)
+{
+    if (current_class == NULL) {
+        error("Can't use 'this' outside of a class.");
+        return;
+    }
+
+    variable(false);
+}
+
 static void unary(bool can_assign)
 {
     token_type_e operator_type = parser.previous.type;
@@ -901,7 +945,7 @@ parse_rule_t rules[] = {
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_THIS]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},
     [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
     [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},

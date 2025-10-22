@@ -91,6 +91,7 @@ obj_class_t *new_class(obj_string_t *name)
     // klass because c++ compiler
     obj_class_t *klass = ALLOCATE_OBJ(obj_class_t, OBJ_CLASS, 0);
     klass->name = name;
+    init_table(&klass->methods);
     return klass;
 }
 
@@ -100,6 +101,14 @@ obj_instance_t *new_instance(obj_class_t *klass)
     instance->klass = klass;
     init_table(&instance->fields);
     return instance;
+}
+
+obj_bound_method_t *new_bound_method(value_t receiver, obj_closure_t *method)
+{
+    obj_bound_method_t *bound = ALLOCATE_OBJ(obj_bound_method_t, OBJ_BOUND_METHOD, 0);
+    bound->receiver = receiver;
+    bound->method = method;
+    return bound;
 }
 
 obj_string_t *allocate_string(const char *chars, int length)
