@@ -94,6 +94,14 @@ obj_class_t *new_class(obj_string_t *name)
     return klass;
 }
 
+obj_instance_t *new_instance(obj_class_t *klass)
+{
+    obj_instance_t *instance = ALLOCATE_OBJ(obj_instance_t, OBJ_INSTANCE, 0);
+    instance->klass = klass;
+    init_table(&instance->fields);
+    return instance;
+}
+
 obj_string_t *allocate_string(const char *chars, int length)
 {
     uint32_t hash = hash_string(chars, length);
@@ -155,6 +163,9 @@ void print_object(value_t value)
             break;
         case OBJ_CLASS:
             printf("%s", AS_CLASS(value)->name->chars);
+            break;
+        case OBJ_INSTANCE:
+            printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
             break;
     }
 }

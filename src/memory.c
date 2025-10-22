@@ -2,6 +2,7 @@
 
 #include "memory.h"
 #include "object.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 #include "compiler.h"
@@ -43,12 +44,6 @@ static void free_object(obj_t *object)
 #endif
 
     switch (object->type) {
-        case OBJ_STRING: {
-            obj_string_t *string = (obj_string_t*)object;
-            FREE_ARRAY(char, string->chars, string->length + 1);
-            FREE(obj_string_t, string);
-            break;
-        }
         case OBJ_FUNCTION: {
             obj_function_t *function = (obj_function_t*)object;
             free_chunk(&function->chunk);
@@ -61,9 +56,6 @@ static void free_object(obj_t *object)
             FREE(obj_closure_t, object);
             break;
         }
-        case OBJ_UPVALUE:
-            FREE(obj_upvalue_t, object);
-            break;
         case OBJ_NATIVE: {
             obj_native_t *native = (obj_native_t*)object;
             FREE(obj_native_t, native);
@@ -73,6 +65,20 @@ static void free_object(obj_t *object)
             FREE(obj_class_t, object);
             break;
         }
+        case OBJ_INSTANCE: {
+            obj_instance_t *instance = (obj_instance_t*)object;
+            free_table(&instance->fields);
+            FREE(obj_instance_t, object);
+            break;
+        }
+        case OBJ_STRING: {
+            obj_string_t *string = (obj_string_t*)object;
+            FREE(obj_string_t, string);
+            break;
+        }
+        case OBJ_UPVALUE:
+            FREE(obj_upvalue_t, object);
+            break;
     }
 }
 
@@ -139,6 +145,12 @@ static void blacken_object(obj_t *object)
         case OBJ_CLASS: {
             obj_class_t *klass = (obj_class_t*)object;
             mark_object((obj_t*)klass->name);
+            break;
+        }
+        case OBJ_INSTANCE: {
+            obj_instance_t *instance = (obj_instance_t*)object;
+            mark_object((obj_t*)instance->klass);
+            mark_table(&instance->fields);
             break;
         }
         case OBJ_NATIVE:

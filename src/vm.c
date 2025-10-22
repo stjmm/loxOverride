@@ -129,6 +129,11 @@ static bool call_value(value_t calle, int arg_count)
                 push(result);
                 return true;
             }
+            case OBJ_CLASS: {
+                obj_class_t *klass = AS_CLASS(calle);
+                vm.stack_top[-arg_count -1] = OBJ_VAL(new_instance(klass));
+                return true;
+            }
             default:
                 break;
         }
@@ -238,6 +243,38 @@ static interpret_result_e run(void)
             case OP_SET_UPVALUE: {
                 uint8_t slot = READ_BYTE();
                 *frame->closure->upvalues[slot]->location = peek(0);
+                break;
+            }
+            case OP_GET_PROPERTY: {
+                if (!IS_INSTANCE(peek(0))) {
+                    runtime_error("Only instances have properties.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                obj_instance_t *instance = AS_INSTANCE(peek(0));
+                obj_string_t *name = READ_STRING();
+
+                value_t value;
+                if (table_get(&instance->fields, name, &value)) {
+                    pop(); // Instance
+                    push(value);
+                    break;
+                }
+
+                runtime_error("Undefined property '%s'.", name->chars);
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            case OP_SET_PROPERTY: {
+                if (!IS_INSTANCE(peek(1))) {
+                    runtime_error("Only instances have fields.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                obj_instance_t *instance = AS_INSTANCE(peek(1));
+                table_set(&instance->fields, READ_STRING(), peek(0));
+                value_t value = pop();
+                pop();
+                push(value);
                 break;
             }
             case OP_EQUAL: {
