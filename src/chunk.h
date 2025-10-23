@@ -40,6 +40,7 @@ typedef enum {
     OP_LOOP,
     OP_CLOSURE,
     OP_CALL,
+    OP_INVOKE,
     OP_CLASS,
     OP_METHOD,
     OP_RETURN,

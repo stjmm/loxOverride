@@ -7,8 +7,8 @@
 
 #define OBJ_TYPE(value)   (AS_OBJ(value)->type)
 
-#define IS_FUNCTION(value)     is_obj_type(value, OBJ_FUNCTION);
-#define IS_CLOSURE(value)      is_obj_type(value, OBJ_CLOSURE);
+#define IS_FUNCTION(value)     is_obj_type(value, OBJ_FUNCTION)
+#define IS_CLOSURE(value)      is_obj_type(value, OBJ_CLOSURE)
 #define IS_CLASS(value)        is_obj_type(value, OBJ_CLASS);
 #define IS_NATIVE(value)       is_obj_type(value, OBJ_NATIVE)
 #define IS_STRING(value)       is_obj_type(value, OBJ_STRING)
@@ -74,6 +74,7 @@ typedef struct {
     obj_t obj;
     obj_string_t *name;
     table_t methods;
+    obj_closure_t *initializer;
 } obj_class_t;
 
 typedef struct {

@@ -3,6 +3,7 @@
 
 #include "object.h"
 #include "table.h"
+#include "value.h"
 
 #define FRAMES_MAX 64
 #define STACK_MAX (FRAMES_MAX * UINT8_COUNT)
@@ -20,6 +21,7 @@ typedef struct {
     value_t *stack_top; // Points to first empty stack element
     table_t globals;
     table_t strings; // Interned strings
+    obj_string_t *init_string;
     obj_upvalue_t *open_upvalues;
     size_t bytes_allocated;
     size_t next_gc;
