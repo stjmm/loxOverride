@@ -38,14 +38,14 @@ Here's a list of new features I've implemented:
     print "after comment";
     ```
 
- Concatenating strings + numbers (Chapter )
--
+- Concatenating strings + numbers (Chapter 19, Challenge 3)
     Adding strings and numbers produce a string.
     ```
     var x = "Nr." + 42;
     print x; //-> Nr. 42
     ```
 
+t
 ## Other challenges implemented that are not exactly features
 - Chapter 15, Challenge 2
 - Chapter 15, Challenge 4
