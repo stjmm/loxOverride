@@ -448,7 +448,9 @@ static interpret_result_e run(void)
                     runtime_error("Operand must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
-                AS_NUMBER(vm.stack_top[-1]) = -AS_NUMBER(vm.stack_top[-1]);
+                // Breaks with NAN-Boxing
+                // AS_NUMBER(vm.stack_top[-1]) = -AS_NUMBER(vm.stack_top[-1]);
+                push(NUMBER_VAL(-AS_NUMBER(pop()))); // "Not optimized way for NAN-Boxing"
                 break;
             case OP_PRINT: {
                 print_value(pop());
