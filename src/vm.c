@@ -351,6 +351,24 @@ static interpret_result_e run(void)
                 push(value);
                 break;
             }
+            case OP_ARRAY: {
+                int count = READ_BYTE();
+
+                obj_array_t *array = new_array();
+                for (int i = count - 1; i >= 0; i--) {
+                    write_value_array(&array->elements, peek(i));
+                }
+
+                for (int i = 0; i < count; i++) {
+                    pop();
+                }
+
+                push(OBJ_VAL(array));
+                break;
+            }
+            case OP_SET_INDEX: {
+                break;
+            }
             case OP_EQUAL: {
                 vm.stack_top[-2] = BOOL_VAL(values_equal(vm.stack_top[-2], vm.stack_top[-1]));
                 vm.stack_top--;

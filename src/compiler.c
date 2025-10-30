@@ -875,6 +875,34 @@ static void this_(bool can_assign)
     variable(false);
 }
 
+static void array_(bool can_assign)
+{
+    int count = 0;
+
+    if (!check(TOKEN_COMMA)) {
+        do {
+            expression();
+            count++;
+        } while(match(TOKEN_COMMA));
+    }
+
+    consume(TOKEN_RIGHT_BRACKET, "Expect ']' after an array initializer.");
+    emit_bytes(OP_ARRAY, count);
+}
+
+static void index_(bool can_assign)
+{
+    expression(); // Parse expressio inside '[]'
+    consume(TOKEN_RIGHT_BRACKET, "Expect ']' after index.");
+
+    if (can_assign && match(TOKEN_EQUAL)) {
+        expression();
+        emit_byte(OP_SET_INDEX);
+    } else {
+        emit_byte(OP_GET_INDEX);
+    }
+}
+
 static void unary(bool can_assign)
 {
     token_type_e operator_type = parser.previous.type;
@@ -989,6 +1017,8 @@ parse_rule_t rules[] = {
     [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
     [TOKEN_LEFT_BRACE]    = {NULL,     NULL,   PREC_NONE}, 
     [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_LEFT_BRACKET]  = {array_,   index_, PREC_NONE},
+    [TOKEN_RIGHT_BRACKET] = {NULL,     NULL,   PREC_NONE},
     [TOKEN_COMMA]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_DOT]           = {NULL,     dot,    PREC_CALL},
     [TOKEN_MINUS]         = {unary,    binary, PREC_TERM},

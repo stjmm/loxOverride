@@ -14,6 +14,7 @@
 #define IS_STRING(value)       is_obj_type(value, OBJ_STRING)
 #define IS_INSTANCE(value)     is_obj_type(value, OBJ_INSTANCE)
 #define IS_BOUND_METHOD(value) is_obj_type(value, OBJ_BOUND_METHOD)
+#define IS_ARRAY(value)        is_obj_type(value, OBJ_ARRAY);
 
 #define AS_FUNCTION(value)    ((obj_function_t*)AS_OBJ(value))
 #define AS_CLOSURE(value)     ((obj_closure_t*)AS_OBJ(value))
@@ -23,9 +24,11 @@
 #define AS_CSTRING(value)     (((obj_string_t*)AS_OBJ(value))->chars)
 #define AS_INSTANCE(value)    ((obj_instance_t*)AS_OBJ(value))
 #define AS_BOUND_METHOD(value)((obj_bound_method_t*)AS_OBJ(value))
+#define AS_ARRAY(value)       ((obj_array_t*)AS_OBJ(value))
 
 typedef enum {
     OBJ_STRING,
+    OBJ_ARRAY,
     OBJ_NATIVE,
     OBJ_FUNCTION,
     OBJ_CLOSURE,
@@ -54,6 +57,11 @@ typedef struct obj_upvalue_t {
     value_t closed;
     struct obj_upvalue_t *next;
 } obj_upvalue_t;
+
+typedef struct {
+    obj_t obj;
+    value_array_t elements;
+} obj_array_t;
 
 typedef struct {
     obj_t obj;
@@ -108,6 +116,7 @@ obj_native_t *new_native(native_fn function);
 obj_class_t *new_class(obj_string_t *name);
 obj_instance_t *new_instance(obj_class_t *klass);
 obj_bound_method_t *new_bound_method(value_t receiver, obj_closure_t *method);
+obj_array_t *new_array(void);
 obj_string_t *allocate_string(const char *chars, int length);
 obj_string_t *concatenate_strings(obj_string_t *a, obj_string_t *b);
 obj_string_t *number_to_string(double number);

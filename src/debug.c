@@ -147,6 +147,15 @@ int dissasemble_instruction(chunk_t *chunk, int offset)
             return jump_instruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
         case OP_LOOP:
             return jump_instruction("OP_LOOP", -1, chunk, offset);
+        case OP_ARRAY: {
+            uint8_t count = chunk->code[offset + 1];
+            printf("%-16s %4d elements\n", "OP_ARRAY", count);
+            return offset + 2;
+        }
+        case OP_SET_INDEX:
+            return simple_instruction("OP_GET_INDEX", offset);
+        case OP_GET_INDEX:
+            return simple_instruction("OP_SET_INDEX", offset);
         case OP_CALL:
             return byte_instruction("OP_CALL", chunk, offset);
         case OP_INVOKE:

@@ -6,6 +6,13 @@ Built following the book, with several extra features from the challenges and so
 ## Challenges & New Features
 
 Here's a list of new features I've implemented:
+- JavaScript-like Dynamic arrays
+    Implemented with hash tables.
+    ```
+    var array = [1, 2, 3, 4];
+    array[50] = 50;
+    ```
+
 - Break/Continue (Chapter 23, Challenge 1,2)
     Loop control flow statements.
     ```
@@ -28,7 +35,9 @@ Here's a list of new features I've implemented:
     ```
 
 - Ternary operator (Chapter 17, Challenge 3)
-    `var happy = true ? "happy" : "sad";`
+    ```
+    var happy = true ? "happy" : "sad";
+    ```
 
 - Block Comments
 
@@ -45,7 +54,7 @@ Here's a list of new features I've implemented:
     print x; //-> Nr. 42
     ```
 
-t
+
 ## Other challenges implemented that are not exactly features
 - Chapter 15, Challenge 2
 - Chapter 15, Challenge 4

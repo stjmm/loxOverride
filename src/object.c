@@ -112,6 +112,13 @@ obj_bound_method_t *new_bound_method(value_t receiver, obj_closure_t *method)
     return bound;
 }
 
+obj_array_t *new_array(void)
+{
+    obj_array_t *array = ALLOCATE_OBJ(obj_array_t, OBJ_ARRAY, 0);
+    init_value_array(&array->elements);
+    return array;
+}
+
 obj_string_t *allocate_string(const char *chars, int length)
 {
     uint32_t hash = hash_string(chars, length);
@@ -156,6 +163,10 @@ obj_string_t *number_to_string(double number) {
 void print_object(value_t value)
 {
     switch (OBJ_TYPE(value)) {
+        case OBJ_BOUND_METHOD: {
+            print_function(AS_BOUND_METHOD(value)->method->function);
+            break;
+        }
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
             break;
@@ -177,5 +188,15 @@ void print_object(value_t value)
         case OBJ_INSTANCE:
             printf("%s instance", AS_INSTANCE(value)->klass->name->chars);
             break;
+        case OBJ_ARRAY: {
+            obj_array_t *array = AS_ARRAY(value);
+            printf("[");
+            for (int i = 0; i < array->elements.count; i++) {
+                print_value(array->elements.values[i]);
+                if (i < array->elements.count - 1) printf(", ");
+            }
+            printf("]");
+            break;
+        }
     }
 }
