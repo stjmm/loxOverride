@@ -12,6 +12,12 @@ Here's a list of new features I've implemented:
     var array = [1, 2, 3, 4];
     array[50] = 50;
     ```
+    You can also index with other values:
+    ```
+    var array = [1, 2];
+    array["5"] = 50;
+    print array["5"]; // Prints 50
+    ```
 
 - Break/Continue (Chapter 23, Challenge 1,2)
     Loop control flow statements.

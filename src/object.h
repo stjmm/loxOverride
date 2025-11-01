@@ -60,7 +60,7 @@ typedef struct obj_upvalue_t {
 
 typedef struct {
     obj_t obj;
-    value_array_t elements;
+    table_t elements;
 } obj_array_t;
 
 typedef struct {

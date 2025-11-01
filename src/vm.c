@@ -49,7 +49,7 @@ static void define_native(const char *name, native_fn function)
 {
     push(OBJ_VAL(allocate_string(name, (int)strlen(name))));
     push(OBJ_VAL(new_native(function)));
-    table_set(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    table_set(&vm.globals, OBJ_VAL(AS_STRING(vm.stack[0])), vm.stack[1]);
     pop();
     pop();
 }
@@ -160,7 +160,7 @@ static bool call_value(value_t calle, int arg_count)
 static bool invoke_from_class(obj_class_t *klass, obj_string_t *name, int arg_count)
 {
     value_t method;
-    if (!table_get(&klass->methods, name, &method)) {
+    if (!table_get(&klass->methods, OBJ_VAL(name), &method)) {
         runtime_error("Undefined property '%s'.", name);
         return false;
     }
@@ -179,7 +179,7 @@ static bool invoke(obj_string_t *name, int arg_count)
     obj_instance_t *instance = AS_INSTANCE(receiver);
 
     value_t value;
-    if (table_get(&instance->fields, name, &value)) {
+    if (table_get(&instance->fields, OBJ_VAL(name), &value)) {
         vm.stack_top[-arg_count - 1] = value;
         return call_value(value, arg_count);
     }
@@ -190,7 +190,7 @@ static bool invoke(obj_string_t *name, int arg_count)
 static bool bind_method(obj_class_t *klass, obj_string_t *name)
 {
     value_t method;
-    if (!table_get(&klass->methods, name, &method)) {
+    if (!table_get(&klass->methods, OBJ_VAL(name), &method)) {
         runtime_error("Undefined property '%s'.", name->chars);
         return false;
     }
@@ -241,7 +241,7 @@ static void define_method(obj_string_t *name)
 {
     value_t method = peek(0);
     obj_class_t *klass = AS_CLASS(peek(1));
-    table_set(&klass->methods, name, method);
+    table_set(&klass->methods, OBJ_VAL(name), method);
     
     if (name == vm.init_string && IS_CLOSURE(method)) {
         klass->initializer = AS_CLOSURE(method);
@@ -327,7 +327,7 @@ static interpret_result_e run(void)
                 obj_string_t *name = READ_STRING();
 
                 value_t value;
-                if (table_get(&instance->fields, name, &value)) {
+                if (table_get(&instance->fields, OBJ_VAL(name), &value)) {
                     pop(); // Instance
                     push(value);
                     break;
@@ -345,7 +345,7 @@ static interpret_result_e run(void)
                 }
 
                 obj_instance_t *instance = AS_INSTANCE(peek(1));
-                table_set(&instance->fields, READ_STRING(), peek(0));
+                table_set(&instance->fields, OBJ_VAL(READ_STRING()), peek(0));
                 value_t value = pop();
                 pop();
                 push(value);
@@ -355,8 +355,10 @@ static interpret_result_e run(void)
                 int count = READ_BYTE();
 
                 obj_array_t *array = new_array();
-                for (int i = count - 1; i >= 0; i--) {
-                    write_value_array(&array->elements, peek(i));
+
+                for (int i = 0; i < count; i++) {
+                    value_t element = peek(count - 1 - i);
+                    table_set(&array->elements, NUMBER_VAL(i), element);
                 }
 
                 for (int i = 0; i < count; i++) {
@@ -366,7 +368,40 @@ static interpret_result_e run(void)
                 push(OBJ_VAL(array));
                 break;
             }
+            case OP_GET_INDEX: {
+                value_t index = pop();
+                value_t array_val = pop();
+
+                if (!IS_OBJ(array_val) || AS_OBJ(array_val)->type != OBJ_ARRAY) {
+                    runtime_error("Can only index arrays.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                
+                obj_array_t *array = AS_ARRAY(array_val);
+
+                value_t value;
+                if (!table_get(&array->elements, index, &value)) {
+                    runtime_error("Undefined array index.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                push(value);
+                break;
+            }
             case OP_SET_INDEX: {
+                value_t value = pop();
+                value_t index = pop();
+                value_t array_val = pop();
+
+                if (!IS_OBJ(array_val) || AS_OBJ(array_val)->type != OBJ_ARRAY) {
+                    runtime_error("Can only index arrays.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                
+                obj_array_t *array = AS_ARRAY(array_val);
+                table_set(&array->elements, index, value);
+
+                push(value);
                 break;
             }
             case OP_EQUAL: {
@@ -412,20 +447,20 @@ static interpret_result_e run(void)
             }
             case OP_DEFINE_GLOBAL: {
                 obj_string_t *name = READ_STRING();
-                table_set(&vm.globals, name, peek(0));
+                table_set(&vm.globals, OBJ_VAL(name), peek(0));
                 pop();
                 break;
             }
             case OP_DEFINE_GLOBAL_16: {
                 obj_string_t *name = READ_STRING_16();
-                table_set(&vm.globals, name, peek(0));
+                table_set(&vm.globals, OBJ_VAL(name), peek(0));
                 pop();
                 break;
             }
             case OP_GET_GLOBAL: {
                 obj_string_t *name = READ_STRING();
                 value_t value;
-                if (!table_get(&vm.globals, name, &value)) {
+                if (!table_get(&vm.globals, OBJ_VAL(name), &value)) {
                     runtime_error("Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -435,7 +470,7 @@ static interpret_result_e run(void)
             case OP_GET_GLOBAL_16: {
                 obj_string_t *name = READ_STRING_16();
                 value_t value;
-                if (!table_get(&vm.globals, name, &value)) {
+                if (!table_get(&vm.globals, OBJ_VAL(name), &value)) {
                     runtime_error("Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -444,16 +479,16 @@ static interpret_result_e run(void)
             }
             case OP_SET_GLOBAL: {
                 obj_string_t *name = READ_STRING();
-                if (table_set(&vm.globals, name, peek(0))) {
-                    table_delete(&vm.globals, name);
+                if (table_set(&vm.globals, OBJ_VAL(name), peek(0))) {
+                    table_delete(&vm.globals, OBJ_VAL(name));
                     runtime_error("Undefined variable '%s'.", name->chars);
                 }
                 break;
             }
             case OP_SET_GLOBAL_16: {
                 obj_string_t *name = READ_STRING_16();
-                if (table_set(&vm.globals, name, peek(0))) {
-                    table_delete(&vm.globals, name);
+                if (table_set(&vm.globals, OBJ_VAL(name), peek(0))) {
+                    table_delete(&vm.globals, OBJ_VAL(name));
                     runtime_error("Undefined variable '%s'.", name->chars);
                 }
                 break;

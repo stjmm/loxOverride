@@ -115,7 +115,7 @@ obj_bound_method_t *new_bound_method(value_t receiver, obj_closure_t *method)
 obj_array_t *new_array(void)
 {
     obj_array_t *array = ALLOCATE_OBJ(obj_array_t, OBJ_ARRAY, 0);
-    init_value_array(&array->elements);
+    init_table(&array->elements);
     return array;
 }
 
@@ -132,7 +132,7 @@ obj_string_t *allocate_string(const char *chars, int length)
     string->hash = hash;
 
     push(OBJ_VAL(string));
-    table_set(&vm.strings, string, NIL_VAL);
+    table_set(&vm.strings, OBJ_VAL(string), NIL_VAL);
     pop();
 
     return string;
@@ -190,12 +190,7 @@ void print_object(value_t value)
             break;
         case OBJ_ARRAY: {
             obj_array_t *array = AS_ARRAY(value);
-            printf("[");
-            for (int i = 0; i < array->elements.count; i++) {
-                print_value(array->elements.values[i]);
-                if (i < array->elements.count - 1) printf(", ");
-            }
-            printf("]");
+            table_print_all(&array->elements);
             break;
         }
     }
