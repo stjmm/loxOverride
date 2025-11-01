@@ -6,7 +6,7 @@ Built following the book, with several extra features from the challenges and so
 ## Challenges & New Features
 
 Here's a list of new features I've implemented:
-- JavaScript-like Dynamic arrays
+- JavaScript-like dynamic arrays
     Implemented with hash tables.
     ```
     var array = [1, 2, 3, 4];
@@ -60,6 +60,7 @@ Here's a list of new features I've implemented:
     print x; //-> Nr. 42
     ```
 
+- Some new native functions (input, clock)
 
 ## Other challenges implemented that are not exactly features
 - Chapter 15, Challenge 2
