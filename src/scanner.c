@@ -245,9 +245,14 @@ token_t scan_token(void)
         case '?': return make_token(TOKEN_QUESTION);
         case ',': return make_token(TOKEN_COMMA);
         case '.': return make_token(TOKEN_DOT);
-        case '-': return make_token(TOKEN_MINUS);
-        case '+': return make_token(TOKEN_PLUS);
         case '*': return make_token(TOKEN_STAR);
+        case '%': return make_token(TOKEN_PERCENT);
+        case '-': 
+            return make_token(
+                match('-') ? TOKEN_DECR : TOKEN_MINUS);
+        case '+': 
+            return make_token(
+                match('+') ? TOKEN_INCR : TOKEN_PLUS);
         case '/':
             if (match('*')) return skip_block_comment();
             else return make_token(TOKEN_SLASH);

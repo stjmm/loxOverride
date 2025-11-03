@@ -129,6 +129,8 @@ int dissasemble_instruction(chunk_t *chunk, int offset)
             return simple_instruction("OP_LESS", offset);
         case OP_ADD:
             return simple_instruction("OP_ADD", offset);
+        case OP_MODULUS:
+            return simple_instruction("OP_MODULUS", offset);
         case OP_SUBTRACT:
             return simple_instruction("OP_SUBTRACT", offset);
         case OP_MULTIPLY:

@@ -925,6 +925,7 @@ static void binary(bool can_assign)
     switch (operator_type) {
         case TOKEN_PLUS:          emit_byte(OP_ADD); break;
         case TOKEN_MINUS:         emit_byte(OP_SUBTRACT); break;
+        case TOKEN_PERCENT:       emit_byte(OP_MODULUS); break;
         case TOKEN_STAR:          emit_byte(OP_MULTIPLY); break;
         case TOKEN_SLASH:         emit_byte(OP_DIVIDE); break;
         case TOKEN_BANG_EQUAL:    emit_bytes(OP_EQUAL, OP_NOT); break;
@@ -1023,6 +1024,7 @@ parse_rule_t rules[] = {
     [TOKEN_DOT]           = {NULL,     dot,    PREC_CALL},
     [TOKEN_MINUS]         = {unary,    binary, PREC_TERM},
     [TOKEN_PLUS]          = {NULL,     binary, PREC_TERM},
+    [TOKEN_PERCENT]       = {NULL,     binary, PREC_TERM},
     [TOKEN_SEMICOLON]     = {NULL,     NULL,   PREC_NONE},
     [TOKEN_QUESTION]      = {NULL,     ternary,PREC_TERNARY},
     [TOKEN_COLON]         = {NULL,     NULL,   PREC_NONE},
@@ -1049,6 +1051,8 @@ parse_rule_t rules[] = {
     [TOKEN_NIL]           = {literal,  NULL,   PREC_NONE},
     [TOKEN_OR]            = {NULL,     or_,    PREC_OR},
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_INCR]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_DECR]          = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SUPER]         = {super_,   NULL,   PREC_NONE},
     [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},

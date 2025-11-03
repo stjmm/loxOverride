@@ -31,6 +31,7 @@ target_compile_definitions(clox PRIVATE
     $<$<CONFIG:Debug>:DEBUG_BUILD>
     $<$<CONFIG:Release>:NDEBUG>
 )
+target_link_libraries(clox m)
 
 if(NOT MSVC)
     set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")

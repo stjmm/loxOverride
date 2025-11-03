@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <math.h>
 
 #include "vm.h"
 #include "chunk.h"
@@ -425,6 +426,16 @@ static interpret_result_e run(void)
                     runtime_error("Operands must be numbers or strings.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
+                break;
+            }
+            case OP_MODULUS: {
+                if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {
+                    runtime_error("Operands must be numbers.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                value_t a = AS_NUMBER(pop());
+                value_t b = AS_NUMBER(pop());
+                push(NUMBER_VAL(fmod(b, a)));
                 break;
             }
             case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;

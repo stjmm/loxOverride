@@ -60,6 +60,8 @@ Here's a list of new features I've implemented:
     print x; //-> Nr. 42
     ```
 
+- Modulus operator, increment, decrement
+
 - Some new native functions (input, clock)
 
 ## Other challenges implemented that are not exactly features
