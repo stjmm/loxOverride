@@ -46,7 +46,6 @@ Here's a list of new features I've implemented:
     ```
 
 - Block Comments
-
     ```
     /* Multi line
         block comment */
@@ -60,7 +59,17 @@ Here's a list of new features I've implemented:
     print x; //-> Nr. 42
     ```
 
-- Modulus operator, increment, decrement
+- Modulus operator, increment, decrement, compound assigments
+    ```
+    var x = 0;
+    x++; // Doesn't leave value on the stack
+    x--;
+    x+=1;
+    x-=2;
+    x*=5;
+    x/=5;
+    x%1;
+    ```
 
 - Some new native functions (input, clock)
 

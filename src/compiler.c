@@ -17,6 +17,7 @@
 typedef struct {
     token_t previous;
     token_t current;
+    token_t last_variable;
     bool had_error;
     bool panic_mode;
 } parser_t;
@@ -828,6 +829,31 @@ static void named_variable(token_t name, bool can_assign)
     }
 }
 
+static void emit_set_variable(token_t name) {
+    int arg = resolve_local(current, &name);
+    if (arg != -1) {
+        emit_bytes(OP_SET_LOCAL, (uint8_t)arg);
+        return;
+    }
+
+    arg = resolve_upvalue(current, &name);
+    if (arg != -1) {
+        emit_bytes(OP_SET_UPVALUE, (uint8_t)arg);
+        return;
+    }
+
+    arg = identifier_constant(&name);
+    if (arg <= UINT8_MAX) {
+        emit_bytes(OP_SET_GLOBAL, (uint8_t)arg);
+    } else if (arg <= UINT16_MAX) {
+        emit_byte(OP_SET_GLOBAL_16);
+        emit_byte((arg >> 0) & 0xFF);
+        emit_byte((arg >> 8) & 0xFF);
+    } else {
+        error("Too many constants. 16-bit max.");
+    }
+}
+
 static token_t synthetic_token(const char *text)
 {
     token_t token;
@@ -862,6 +888,7 @@ static void super_(bool can_assign)
 
 static void variable(bool can_assign)
 {
+    parser.last_variable = parser.previous;
     named_variable(parser.previous, can_assign);
 }
 
@@ -1013,6 +1040,65 @@ static void literal(bool can_assign)
     }
 }
 
+static void incr(bool can_assign)
+{
+    if (!can_assign) {
+        error("Invalid increment target.");
+        return;
+    }
+
+    token_t name = parser.last_variable;
+    named_variable(name, false);
+    emit_constant(NUMBER_VAL(1));
+    emit_byte(OP_ADD);
+    emit_set_variable(name);
+    emit_byte(OP_POP);
+}
+
+static void decr(bool can_assign)
+{
+    if (!can_assign) {
+        error("Invalid increment target.");
+        return;
+    }
+
+    token_t name = parser.last_variable;
+    named_variable(name, false);
+    emit_constant(NUMBER_VAL(-1));
+    emit_byte(OP_ADD);
+    emit_set_variable(name);
+    emit_byte(OP_POP);
+}
+
+// Compound assignment (so it fitst in rules hehe)
+static void c_ass(bool can_assign)
+{
+    if (!can_assign) {
+        error("Invalid assignment target.");
+        return;
+    }
+
+    token_t op = parser.previous;
+    token_t name = parser.last_variable;
+
+    named_variable(name, false);
+
+    parse_precedence(PREC_ASSIGNMENT + 1);
+
+    switch (op.type) {
+        case TOKEN_PLUS_EQUAL:  emit_byte(OP_ADD);      break;
+        case TOKEN_MINUS_EQUAL: emit_byte(OP_SUBTRACT); break;
+        case TOKEN_STAR_EQUAL:  emit_byte(OP_MULTIPLY); break;
+        case TOKEN_SLASH_EQUAL: emit_byte(OP_DIVIDE);   break;
+        default:
+            error("Unknown compunt assignment operator.");
+            return;
+    }
+
+    emit_set_variable(name);
+    emit_byte(OP_POP);
+}
+
 parse_rule_t rules[] = {
     [TOKEN_LEFT_PAREN]    = {grouping, call,   PREC_CALL},
     [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,   PREC_NONE},
@@ -1024,6 +1110,12 @@ parse_rule_t rules[] = {
     [TOKEN_DOT]           = {NULL,     dot,    PREC_CALL},
     [TOKEN_MINUS]         = {unary,    binary, PREC_TERM},
     [TOKEN_PLUS]          = {NULL,     binary, PREC_TERM},
+    [TOKEN_PLUS_PLUS]     = {NULL,     incr,   PREC_UNARY},
+    [TOKEN_MINUS_MINUS]   = {NULL,     decr,   PREC_UNARY},
+    [TOKEN_PLUS_EQUAL]    = {NULL,     c_ass,  PREC_ASSIGNMENT},
+    [TOKEN_MINUS_EQUAL]   = {NULL,     c_ass,  PREC_ASSIGNMENT},
+    [TOKEN_STAR_EQUAL]    = {NULL,     c_ass,  PREC_ASSIGNMENT},
+    [TOKEN_SLASH_EQUAL]   = {NULL,     c_ass,  PREC_ASSIGNMENT},
     [TOKEN_PERCENT]       = {NULL,     binary, PREC_TERM},
     [TOKEN_SEMICOLON]     = {NULL,     NULL,   PREC_NONE},
     [TOKEN_QUESTION]      = {NULL,     ternary,PREC_TERNARY},
@@ -1051,8 +1143,6 @@ parse_rule_t rules[] = {
     [TOKEN_NIL]           = {literal,  NULL,   PREC_NONE},
     [TOKEN_OR]            = {NULL,     or_,    PREC_OR},
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_INCR]          = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_DECR]          = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SUPER]         = {super_,   NULL,   PREC_NONE},
     [TOKEN_THIS]          = {this_,    NULL,   PREC_NONE},
